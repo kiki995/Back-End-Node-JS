@@ -69,10 +69,10 @@ node-fetch
 
 FakeStore API
 
-👨‍💻 Autor
-Cristian Miranda
-📍 Argentina
-🔗 GitHub
+👨‍💻 Autor  
+Cristian Miranda  
+📍 Argentina  
+🔗 GitHub  
 
 
 💬 “Desarrollado como parte del desafío técnico de TechLab — demostrando dominio de asincronismo, APIs y Node.js.”
