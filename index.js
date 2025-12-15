@@ -1,84 +1,38 @@
-// index.js
-import fetch from 'node-fetch'; // instalar: npm install node-fetch
+import express from "express"
+import cors from "cors"
+import { configDotenv } from "dotenv"
+import rutasLog from "./src/routes/auth.routes.js"
+import rutasProductos from "./src/routes/products.routes.js"
 
-const URL_BASE = 'https://fakestoreapi.com/products';
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-// Capturamos los argumentos desde la terminal
-const [,, metodo, recurso, ...args] = process.argv;
-
-// Funciones para interactuar con la API
-async function obtenerTodosLosProductos() {
-    try {
-        const respuesta = await fetch(URL_BASE);
-        const datos = await respuesta.json();
-        console.log('Lista de productos:');
-        console.table(datos);
-    } catch (error) {
-        console.error('Error al obtener productos:', error);
-    }
+const corsConfig = {
+    origin: ['http://localhost:3000', 'https://midominio.com'], // dominios permitidos
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],                  // métodos permitidos
+    allowedHeaders: ['Content-Type', 'Authorization'],          // cabeceras permitidas
+    exposedHeaders: ['Content-Length'],                         // cabeceras visibles al cliente
+    credentials: true,                                          // habilitar credenciales
+    maxAge: 600,                                                // cache preflight
+    optionsSuccessStatus: 204                                   // respuesta preflight exitosa
 }
 
-async function obtenerProducto(id) {
-    try {
-        const respuesta = await fetch(`${URL_BASE}/${id}`);
-        if (!respuesta.ok) throw new Error(`Producto con ID ${id} no encontrado`);
-        const datos = await respuesta.json();
-        console.log('Producto encontrado:');
-        console.log(datos);
-    } catch (error) {
-        console.error('Error al obtener producto:', error);
-    }
-}
+app.use(cors(corsConfig))
+app.use(express.json())
 
-async function crearProducto(titulo, precio, categoria) {
-    try {
-        const respuesta = await fetch(URL_BASE, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title: titulo, price: precio, category: categoria })
-        });
-        const datos = await respuesta.json();
-        console.log('Producto creado:');
-        console.log(datos);
-    } catch (error) {
-        console.error('Error al crear producto:', error);
-    }
-}
+app.use("/api", rutasLog)
 
-async function eliminarProducto(id) {
-    try {
-        const respuesta = await fetch(`${URL_BASE}/${id}`, { method: 'DELETE' });
-        if (!respuesta.ok) throw new Error(`No se pudo eliminar el producto con ID ${id}`);
-        const datos = await respuesta.json();
-        console.log('Producto eliminado:');
-        console.log(datos);
-    } catch (error) {
-        console.error('Error al eliminar producto:', error);
-    }
-}
+app.use((req, res, next) => {
+    console.log(`Datos received at:  ${req.method} ${req.url}`);
+    next();
+});
 
-// Lógica principal para interpretar comandos
-(async () => {
-    if (metodo === 'GET') {
-        if (recurso === 'products') {
-            await obtenerTodosLosProductos();
-        } else if (recurso.startsWith('products/')) {
-            const id = recurso.split('/')[1];
-            await obtenerProducto(id);
-        } else {
-            console.log('Comando GET no reconocido');
-        }
-    } else if (metodo === 'POST' && recurso === 'products') {
-        const [titulo, precio, categoria] = args;
-        if (!titulo || !precio || !categoria) {
-            console.log('Faltan datos para crear el producto: título precio categoría');
-        } else {
-            await crearProducto(titulo, precio, categoria);
-        }
-    } else if (metodo === 'DELETE' && recurso.startsWith('products/')) {
-        const id = recurso.split('/')[1];
-        await eliminarProducto(id);
-    } else {
-        console.log('Comando no reconocido. Usa GET, POST o DELETE con la sintaxis correcta.');
-    }
-})();
+app.use("/api", rutasProductos)
+
+app.use((req, res, next) => {
+    res.status(404).send('Recurso no encontrado o ruta inválida');
+});
+
+app.listen(PORT, () => {
+    console.log(`Servidor corriendo en http://localhost:${PORT}`)
+})
